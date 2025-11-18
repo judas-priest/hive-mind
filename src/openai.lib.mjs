@@ -196,12 +196,12 @@ export const executeOpenAI = async (params) => {
       await log(text);
     }
 
-    // Optionally persist response as a work artifact and commit it.
-    // This helps ensure visible commits/PR diffs in OpenAI mode when enabled by user flag.
+    // Persist response as a work artifact. Always write the file when content exists;
+    // commit/push it only if auto-commit is enabled.
     try {
       // Support both dashed and camelCase keys
       const autoCommitFlag = argv.autoCommitUncommittedChanges ?? argv['auto-commit-uncommitted-changes'];
-      if (content && autoCommitFlag) {
+      if (content) {
         const outFile = path.join(tempDir, 'OPENAI_RESPONSE.md');
         const timestamp = new Date().toISOString();
         const header = `# OpenAI-Compatible Response\n\n- Model: ${argv.model}\n- Time: ${timestamp}\n- Issue: ${issueUrl || (issueNumber ? `${owner}/${repo}#${issueNumber}` : 'n/a')}\n- PR: ${prUrl || (prNumber ? `https://github.com/${owner}/${repo}/pull/${prNumber}` : 'n/a')}\n\n---\n\n`;
@@ -211,24 +211,28 @@ export const executeOpenAI = async (params) => {
         const finalContent = existing ? (existing.trimEnd() + '\n\n---\n\n' + newContent) : newContent;
         await fs.writeFile(outFile, finalContent, 'utf8');
 
-        // Commit and push the artifact
-        const addRes = await $({ cwd: tempDir })`git add ${path.basename(outFile)} 2>&1`;
-        if (addRes.code === 0) {
-          const commitMsg = 'Add OpenAI-compatible response artifact';
-          const commitRes = await $({ cwd: tempDir })`git commit -m ${commitMsg} 2>&1`;
-          if (commitRes.code === 0) {
-            await log('✅ OpenAI response saved and committed');
-            const pushRes = await $({ cwd: tempDir })`git push origin ${branchName} 2>&1`;
-            if (pushRes.code === 0) {
-              await log('✅ OpenAI response pushed to remote');
+        if (autoCommitFlag) {
+          // Commit and push the artifact
+          const addRes = await $({ cwd: tempDir })`git add ${path.basename(outFile)} 2>&1`;
+          if (addRes.code === 0) {
+            const commitMsg = 'Add OpenAI-compatible response artifact';
+            const commitRes = await $({ cwd: tempDir })`git commit -m ${commitMsg} 2>&1`;
+            if (commitRes.code === 0) {
+              await log('✅ OpenAI response saved and committed');
+              const pushRes = await $({ cwd: tempDir })`git push origin ${branchName} 2>&1`;
+              if (pushRes.code === 0) {
+                await log('✅ OpenAI response pushed to remote');
+              } else {
+                await log(`⚠️ Warning: Could not push OpenAI response: ${(pushRes.stderr || pushRes.stdout || '').toString().trim()}`, { level: 'warning' });
+              }
             } else {
-              await log(`⚠️ Warning: Could not push OpenAI response: ${(pushRes.stderr || pushRes.stdout || '').toString().trim()}`, { level: 'warning' });
+              await log(`⚠️ Warning: Could not commit OpenAI response: ${(commitRes.stderr || commitRes.stdout || '').toString().trim()}`, { level: 'warning' });
             }
           } else {
-            await log(`⚠️ Warning: Could not commit OpenAI response: ${(commitRes.stderr || commitRes.stdout || '').toString().trim()}`, { level: 'warning' });
+            await log(`⚠️ Warning: Could not stage OpenAI response: ${(addRes.stderr || addRes.stdout || '').toString().trim()}`, { level: 'warning' });
           }
         } else {
-          await log(`⚠️ Warning: Could not stage OpenAI response: ${(addRes.stderr || addRes.stdout || '').toString().trim()}`, { level: 'warning' });
+          await log('✅ OpenAI response artifact saved (not committed by request)');
         }
       }
     } catch (persistError) {

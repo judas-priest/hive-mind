@@ -66,6 +66,13 @@ export const createYargsConfig = (yargsInstance) => {
       default: true,
       hidden: true
     })
+    // Define tool before any options whose defaults depend on it
+    .option('tool', {
+      type: 'string',
+      description: 'AI tool to use for solving issues',
+      choices: ['claude', 'opencode', 'codex', 'openai'],
+      default: 'claude'
+    })
     .option('model', {
       type: 'string',
       description: 'Model to use (for claude: opus, sonnet, haiku; for opencode: grok, gpt4o; for codex: gpt5, gpt5-codex, o3; for openai: gpt-4o, gpt-4o-mini, etc.)',
@@ -238,12 +245,7 @@ export const createYargsConfig = (yargsInstance) => {
       description: 'Prefix fork name with original owner name (e.g., "owner-repo" instead of "repo"). Useful when forking repositories with same name from different owners. Experimental feature.',
       default: false
     })
-    .option('tool', {
-      type: 'string',
-      description: 'AI tool to use for solving issues',
-      choices: ['claude', 'opencode', 'codex', 'openai'],
-      default: 'claude'
-    })
+    // 'tool' option moved earlier to ensure dependent defaults see it
     .parserConfiguration({
       'boolean-negation': true
     })
