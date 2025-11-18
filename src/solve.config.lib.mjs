@@ -102,7 +102,7 @@ export const createYargsConfig = (yargsInstance) => {
     })
     .option('auto-pull-request-creation', {
       type: 'boolean',
-      description: 'Automatically create a draft pull request before running Claude',
+      description: 'Automatically create a draft pull request before running the tool',
       default: true
     })
     .option('verbose', {

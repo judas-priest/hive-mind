@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import  getenv  from "getenv";
+import getenv from 'getenv';
 /**
  * Central configuration module for all configurable values
  * Provides environment variable overrides with sensible defaults
