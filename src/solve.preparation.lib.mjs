@@ -125,7 +125,9 @@ export async function checkUncommittedChanges({
 }) {
   // Check for uncommitted changes before running Claude
   // Only add to feedback if auto-commit is disabled
-  if (!argv['auto-commit-uncommitted-changes']) {
+  // Respect both dashed and camelCase flags
+  const autoCommitFlag = argv.autoCommitUncommittedChanges ?? argv['auto-commit-uncommitted-changes'];
+  if (!autoCommitFlag) {
     await log('\n🔍 Checking for uncommitted changes to include as feedback...');
     try {
       const gitStatusResult = await $({ cwd: tempDir })`git status --porcelain 2>&1`;

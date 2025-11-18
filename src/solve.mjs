@@ -951,8 +951,9 @@ try {
 
   // Check for uncommitted changes
   // When limit is reached, force auto-commit of any uncommitted changes to preserve work
-  const shouldAutoCommit = argv['auto-commit-uncommitted-changes'] || limitReached;
-  const autoRestartEnabled = argv['autoRestartOnUncommittedChanges'] !== false;
+  // Support both dashed and camelCase keys from yargs
+  const shouldAutoCommit = (argv.autoCommitUncommittedChanges ?? argv['auto-commit-uncommitted-changes']) || limitReached;
+  const autoRestartEnabled = ((argv.autoRestartOnUncommittedChanges ?? argv['auto-restart-on-uncommitted-changes']) !== false);
   const shouldRestart = await checkForUncommittedChanges(tempDir, owner, repo, branchName, $, log, shouldAutoCommit, autoRestartEnabled);
 
   // Remove CLAUDE.md now that Claude command has finished

@@ -199,7 +199,9 @@ export const executeOpenAI = async (params) => {
     // Optionally persist response as a work artifact and commit it.
     // This helps ensure visible commits/PR diffs in OpenAI mode when enabled by user flag.
     try {
-      if (content && argv['auto-commit-uncommitted-changes']) {
+      // Support both dashed and camelCase keys
+      const autoCommitFlag = argv.autoCommitUncommittedChanges ?? argv['auto-commit-uncommitted-changes'];
+      if (content && autoCommitFlag) {
         const outFile = path.join(tempDir, 'OPENAI_RESPONSE.md');
         const timestamp = new Date().toISOString();
         const header = `# OpenAI-Compatible Response\n\n- Model: ${argv.model}\n- Time: ${timestamp}\n- Issue: ${issueUrl || (issueNumber ? `${owner}/${repo}#${issueNumber}` : 'n/a')}\n- PR: ${prUrl || (prNumber ? `https://github.com/${owner}/${repo}/pull/${prNumber}` : 'n/a')}\n\n---\n\n`;
